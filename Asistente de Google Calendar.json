@@ -1,0 +1,583 @@
+{
+  "name": "Asistente de Google Calendar",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "541e3126-8c6a-4f8f-926d-a8c57731bec2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -608,
+        -16
+      ],
+      "id": "5985d58d-e7c7-4c77-b90d-e23aeaac8d8d",
+      "name": "Webhook",
+      "webhookId": "541e3126-8c6a-4f8f-926d-a8c57731bec2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3022f704-851a-436d-b77c-b6594aca1d85",
+              "name": "sender",
+              "value": "={{ $json.body.data.key.remoteJid }}",
+              "type": "string"
+            },
+            {
+              "id": "5d81c284-a2df-4d13-8881-abc4be79d721",
+              "name": "message_type",
+              "value": "={{ $json.body.data.messageType }}",
+              "type": "string"
+            },
+            {
+              "id": "fa0b1d79-bfd3-4415-bda3-5f5bd2d17cdd",
+              "name": "voice_message",
+              "value": "={{ $json.body.data.message.base64 }}",
+              "type": "string"
+            },
+            {
+              "id": "9d5c353b-912e-4195-a900-7b303d8a2abc",
+              "name": "text_message",
+              "value": "={{ $json.body.data.message.conversation }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        -16
+      ],
+      "id": "6d2af841-91ee-4a90-ac4e-19046b94f8de",
+      "name": "data message extraction"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "11074833-75bb-4c6e-8ebd-a89e445600f1",
+              "leftValue": "={{ $json.message_type }}",
+              "rightValue": "conversation",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -192,
+        -16
+      ],
+      "id": "eca0506f-278f-4122-b046-c0246a77aa81",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "voice_message",
+        "options": {
+          "mimeType": "audio/ogg"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        80
+      ],
+      "id": "c81c4101-431e-4113-8093-0089af3e5ee6",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        224,
+        80
+      ],
+      "id": "516975c6-8ed1-49e5-b37d-c059920dbdbd",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "s0yOYkx0iJDBvk9m",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1a60ce35-0905-4a45-9d5b-fa8490ad4c80",
+              "name": "final_message",
+              "value": "={{ $json.text_message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        -144
+      ],
+      "id": "bec32fb3-57df-40b7-8644-daae04707bf4",
+      "name": "final_message_txt"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bc186a10-c202-4693-9303-a8ec438e9c20",
+              "name": "final_message",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "7689355d-a475-46e4-ad9c-089ff22de841",
+              "name": "sessionId",
+              "value": "={{ $('Webhook').item.json.body.data.key.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        80
+      ],
+      "id": "53b52011-86a5-4fb6-a5ba-d554a3cf937d",
+      "name": "final_message_voice"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.final_message }}",
+        "options": {
+          "systemMessage": "Eres un asistente llamado JARVIS que interpreta mensajes recibidos por WhatsApp para gestionar citas en Google Calendar.\n\nHoy es {{ $now }}. Zona horaria: America/Bogota (UTC-5)\n\nTu trabajo es entender lo que el usuario necesita y actuar en consecuencia, usando las herramientas disponibles. Solo gestionas citas. No respondes preguntas generales.\n\nPuedes realizar las siguientes tareas:\n- crear_evento: cuando el usuario quiere agendar una cita nueva\n- reprogramar_evento: cuando quiere cambiar la fecha o la hora de una cita existente\n- eliminar_evento: cuando quiere cancelar una cita existente\n- consultar_evento: cuando quiere saber cuándo tiene una cita\n\nEjemplos de mensajes y sus intenciones:\n- “Agenda una reunión con Laura mañana a las 4” = crear_evento\n- “Pasemos la cita del lunes para el miércoles” = reprogramar_evento\n- “Cancela la reunión de hoy” = eliminar_evento\n- “¿Qué tengo esta semana?” = consultar_evento\n\nHerramientas disponibles según la tarea:\n- crear_evento = agendar cita\n- reprogramar_evento = reprogramar cita\n- eliminar_evento = cancelar cita\n- consultar_evento = consultar citas\n\nTu respuesta debe ser en lenguaje natural, clara y breve, como si estuvieras escribiendo por WhatsApp. Usa emojis si es apropiado.\n\nExtrae toda la información posible del mensaje: título, fecha, hora, duración y ubicación. Si algún dato importante no está claro (por ejemplo, la hora), pregúntalo de forma amable antes de ejecutar la acción.\n\nEjemplos de respuesta:\n- Evento creado: “Listo, agendé tu cita ‘Reunión con Laura’ para mañana a las 4:00 p.m. 😊”\n- Evento reprogramado: “He actualizado tu cita. Ahora es el miércoles a las 3:00 p.m.”\n- Evento eliminado: “He cancelado tu cita programada para hoy. Si necesitas otra, dime. 👍”\n- Consulta: “Tienes una cita ‘Reunión con equipo’ el viernes a las 10:00 a.m.”\n\nSi el mensaje es ambiguo o no se entiende qué desea el usuario, pídele amablemente que aclare su intención.\n\nNo devuelvas estructuras técnicas ni generes JSON. Tu única salida debe ser una respuesta conversacional humana.\n\nPuedes usar la memoria de los últimos 10 mensajes del usuario para mantener el contexto si es necesario.\n\nTen en cuenta estas expresiones comunes de fecha y su interpretación:\n- “mañana a las 10am” = día siguiente a la fecha actual, a las 10:00 a.m.\n- “el próximo lunes” = el lunes siguiente a la fecha actual\n- “dentro de 8 días” = ocho días después de la fecha actual\n- “el mes que viene” = el mismo día del mes siguiente\n- “este viernes por la tarde” = si el viernes ya pasó esta semana, se refiere al próximo viernes\n\nSi no se menciona una duración específica para la cita, asume que es de una hora.\n\nCuando uses una herramienta, asegúrate de proporcionar correctamente estos datos si están disponibles en el mensaje del usuario:\n- Título del evento = summary\n- Fecha y hora de inicio = startTime (formato ISO 8601)\n- Fecha y hora de finalización = endTime (puede calcularse si hay duración)\n- Descripción = description (opcional)\n- Ubicación = location (opcional)\n\nNo incluyas enlaces de videollamadas (como Google Meet) en tus respuestas, aunque la herramienta los devuelva."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        -64
+      ],
+      "id": "e6b303c5-734a-4bf7-accf-81893d67769b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        192
+      ],
+      "id": "3e9c402b-ea48-4a36-b804-754fdc23b162",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "s0yOYkx0iJDBvk9m",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usa esta herramienta cuando el usaurio quiera crear una nueva cita.",
+        "calendar": {
+          "__rl": true,
+          "value": "ufernando769@gmail.com",
+          "mode": "list",
+          "cachedResultName": "ufernando769@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        224
+      ],
+      "id": "d696ef31-c0e0-40e7-975a-3bff97f02067",
+      "name": "agendar_cita",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "uX0DDMmTKWyXDV5A",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usa esta herramienta cuando el usuario quiera mover una cita a otro día u hora.",
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "ufernando769@gmail.com",
+          "mode": "list",
+          "cachedResultName": "ufernando769@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "updateFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1024,
+        176
+      ],
+      "id": "40f3da00-92fa-4249-b92b-9f6c615c70ec",
+      "name": "repgromar_cita",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "uX0DDMmTKWyXDV5A",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usa esta herramienta si el usuario quiere eliminar una cita existente.",
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "ufernando769@gmail.com",
+          "mode": "list",
+          "cachedResultName": "ufernando769@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1168,
+        128
+      ],
+      "id": "a25782e3-43ad-48fc-a931-7fc434bc83af",
+      "name": "cancelar_cita",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "uX0DDMmTKWyXDV5A",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Usa esta herramienta si el usuario quiere saber cuándo tiene una cita.",
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "ufernando769@gmail.com",
+          "mode": "list",
+          "cachedResultName": "ufernando769@gmail.com"
+        },
+        "limit": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1312,
+        48
+      ],
+      "id": "72a22dbf-d574-4087-8654-84da7dfa9ec9",
+      "name": "consultar_citas",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "uX0DDMmTKWyXDV5A",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        192
+      ],
+      "id": "02f0b858-f6d8-42e5-bdec-dc8bada16f71",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "ZBgBm7nU34bWQEan",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://72.60.65.85:8080/message/sendText/{{ $('Webhook').item.json.body.instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "123456.+az1"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $(\"data message extraction\").item.json.sender.split('@')[0] }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1136,
+        -128
+      ],
+      "id": "33b559d1-59a8-4c73-95fa-9190a42671b1",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "data message extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "data message extraction": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "final_message_txt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "final_message_voice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "final_message_txt": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "final_message_voice": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "agendar_cita": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "repgromar_cita": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cancelar_cita": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_citas": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Managua",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "5cc5c1bc-329e-4d10-b4f2-c058ffd6d016",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "407e2d1b721d661e185c0eb7fb7a5f561bfdcd9ef9126d910074db357e63ffe4"
+  },
+  "id": "XPlivtDkUOcDwmlv",
+  "tags": []
+}
