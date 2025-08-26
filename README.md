@@ -1,38 +1,38 @@
 # WhatsApp Virtual Assistant – Calendar Scheduler
 
-## 📌 Descripción
-Este proyecto implementa un asistente virtual conectado a **WhatsApp** que utiliza **n8n** como orquestador para automatizar la gestión de citas en **Google Calendar**.  
+## 📌 Description
+This project implements a **WhatsApp-based virtual assistant** using **n8n** to automate scheduling and calendar management with **Google Calendar**.  
 
-Los usuarios pueden enviar mensajes de texto o notas de voz a través de WhatsApp, y el asistente es capaz de:
-- Transcribir notas de voz usando **OpenAI Whisper**.
-- Interpretar solicitudes con **IA (OpenAI GPT)**.
-- Crear, reprogramar, cancelar y consultar citas en **Google Calendar** automáticamente.
-- Responder al usuario por WhatsApp con confirmaciones.
+Users can send text messages or voice notes through WhatsApp, and the assistant is able to:
+- Transcribe voice notes using **OpenAI Whisper**.
+- Interpret user requests with **AI (OpenAI GPT)**.
+- Automatically create, reschedule, cancel, and query events in **Google Calendar**.
+- Send back confirmations to the user via WhatsApp.
 
-## 🚀 Tecnologías utilizadas
-- [n8n](https://n8n.io/) (automatización de flujos de trabajo)
-- [EvolutionAPI](https://github.com/)** (puente para WhatsApp)
-- [OpenAI API](https://platform.openai.com/) (procesamiento de lenguaje natural y transcripción)
+## 🚀 Technologies Used
+- [n8n](https://n8n.io/) (workflow automation)
+- [EvolutionAPI](https://github.com/) (WhatsApp integration)
+- [OpenAI API](https://platform.openai.com/) (NLP and transcription)
 - [Google Calendar API](https://developers.google.com/calendar)
 
-## 📂 Funcionalidades principales
-- Recepción de mensajes (texto o voz) desde WhatsApp.
-- Transcripción de audios a texto.
-- Interpretación y gestión de citas mediante IA.
-- Creación, reprogramación, cancelación y consulta de eventos en Google Calendar.
-- Respuesta automática al usuario vía WhatsApp.
+## 📂 Key Features
+- Receive messages (text or audio) from WhatsApp.
+- Transcribe audio into text.
+- Understand intent using AI.
+- Manage calendar events automatically (create, update, delete, query).
+- Send confirmation messages back to the user.
 
-## ⚙️ Estructura del Workflow
-1. **Webhook** → recibe mensajes de EvolutionAPI (WhatsApp).
-2. **Data Extraction** → extrae texto o base64 de audio.
-3. **IF Node** → determina si es texto o audio.
-4. **Convert + Transcribe** → si es audio, convierte y transcribe con OpenAI.
-5. **AI Agent (OpenAI)** → interpreta el mensaje.
-6. **Google Calendar Nodes** → agenda, consulta, cancela o reprograma eventos.
-7. **HTTP Request** → envía la confirmación al usuario vía WhatsApp.
+## ⚙️ Workflow Structure
+1. **Webhook** → receives messages from EvolutionAPI (WhatsApp).
+2. **Data Extraction** → extracts text or base64 audio.
+3. **IF Node** → checks if the input is text or audio.
+4. **Convert + Transcribe** → audio is converted and transcribed with OpenAI.
+5. **AI Agent (OpenAI)** → interprets the user’s message.
+6. **Google Calendar Nodes** → manage events (create, update, query, delete).
+7. **HTTP Request** → sends confirmation to the user via WhatsApp.
 
-## 📸 Ejemplo de flujo
-![Workflow Calendar](./images/calendar-workflow.png)
+## 📸 Workflow Example
+![Calendar Workflow](./images/calendar-workflow.png)
 
-## 📝 Conclusión
-Este asistente demuestra cómo integrar **IA + mensajería + automatización** para resolver problemas reales de gestión de citas de manera automática.
+## 📝 Conclusion
+This assistant demonstrates how to combine **AI + messaging + automation** to build a powerful and practical tool for managing appointments in real time.
